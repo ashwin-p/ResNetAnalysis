@@ -81,6 +81,47 @@ class ResidualBlock(nn.Module):
         out = self.conv2(out)
         return out + shortcut
 
+class BottleneckBlock(nn.Module):
+    def __init__(self, in_channels, out_channels, stride=1, bottleneck_ratio=4, negative_slope=0.01):
+        super().__init__()
+        mid_channels = out_channels // bottleneck_ratio
+
+        self.preact1 = nn.Sequential(
+            nn.GroupNorm(16, in_channels),
+            nn.LeakyReLU(negative_slope)
+        )
+        self.conv1 = nn.Conv2d(in_channels, mid_channels, kernel_size=1, bias=False)
+
+        self.preact2 = nn.Sequential(
+            nn.GroupNorm(16, mid_channels),
+            nn.LeakyReLU(negative_slope)
+        )
+        self.conv2 = nn.Conv2d(mid_channels, mid_channels, kernel_size=3, stride=stride, padding=1, bias=False)
+
+        self.preact3 = nn.Sequential(
+            nn.GroupNorm(16, mid_channels),
+            nn.LeakyReLU(negative_slope)
+        )
+        self.conv3 = nn.Conv2d(mid_channels, out_channels, kernel_size=1, bias=False)
+
+        if in_channels != out_channels or stride != 1:
+            self.shortcut = nn.Sequential(
+                nn.Conv2d(in_channels, out_channels, kernel_size=1, stride=stride, bias=False),
+                nn.GroupNorm(16, out_channels)
+            )
+        else:
+            self.shortcut = nn.Identity()
+
+    def forward(self, x):
+        shortcut = self.shortcut(x)
+        out = self.preact1(x)
+        out = self.conv1(out)
+        out = self.preact2(out)
+        out = self.conv2(out)
+        out = self.preact3(out)
+        out = self.conv3(out)
+        return out + shortcut
+
 def initialize_weights(module):
     if isinstance(module, nn.Conv2d) or isinstance(module, nn.Linear):
         nn.init.kaiming_normal_(module.weight, a=0.01, mode="fan_out", nonlinearity="leaky_relu")

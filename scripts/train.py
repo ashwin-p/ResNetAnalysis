@@ -119,9 +119,9 @@ if __name__ == "__main__":
     val_set = ImageNet100Dataset(root_dir, val_folder, val_transform)
 
     train_loader = DataLoader(train_set, batch_size=batch_size, shuffle=True,
-                              num_workers=4, pin_memory=True, persistent_workers=True)
+                              num_workers=16, pin_memory=True, persistent_workers=True)
     val_loader = DataLoader(val_set, batch_size=batch_size, shuffle=False,
-                            num_workers=4, pin_memory=True, persistent_workers=True)
+                            num_workers=16, pin_memory=True, persistent_workers=True)
 
     csv_logger = CSVLogger(save_dir="logs", name="imagenet100")
 
