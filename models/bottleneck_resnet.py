@@ -1,13 +1,13 @@
 import torch
 import torch.nn as nn
-from models.components import Backbone, BottleneckBlock, ClassificationHead, initialize_weights
+from models.components import Backbone,ResidualBlock, BottleneckBlock, ClassificationHead, initialize_weights
 
 class BottleneckResNet(nn.Module):
     def __init__(self, num_classes=100, num_extra_blocks=0, bottleneck_ratio=4):
         super().__init__()
         self.backbone = Backbone()
 
-        self.stage1 = BottleneckBlock(64, 64, stride=1, bottleneck_ratio=bottleneck_ratio)
+        self.stage1 = ResidualBlock(64, 64)
 
         self.stage2 = nn.ModuleList()
         self.stage2.append(BottleneckBlock(64, 128, stride=2, bottleneck_ratio=bottleneck_ratio))
