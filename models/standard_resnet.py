@@ -1,7 +1,6 @@
 import torch
 import torch.nn as nn
-from models.components import Backbone, ResidualBlock, ClassificationHead
-
+from models.components import Backbone, ResidualBlock, ClassificationHead, initialize_weights
 
 class StandardResNet(nn.Module):
     def __init__(self, num_classes=100, num_extra_resblocks=0):
@@ -24,6 +23,15 @@ class StandardResNet(nn.Module):
         
         self.gap = nn.AdaptiveAvgPool2d((1, 1))
         self.head = ClassificationHead(512, num_classes)
+        
+        self.apply(initialize_weights)
+
+        for m in self.modules():
+            if isinstance(m, ResidualBlock):
+                if hasattr(m, "conv2"):
+                    for n in m.preact2:
+                        if isinstance(n, nn.GroupNorm):
+                            nn.init.constant_(n.weight, 0)
 
     def forward(self, x):
         x = self.backbone(x)
@@ -39,6 +47,5 @@ class StandardResNet(nn.Module):
         x = self.gap(x)
         x = torch.flatten(x, 1)
         x = self.head(x)
-        
         return x
 

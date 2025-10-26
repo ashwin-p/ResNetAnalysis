@@ -20,9 +20,8 @@ class ImageNet100Classifier(pl.LightningModule):
     def __init__(self, lr=0.1, max_epochs=120, warmup_epochs=10):
         super().__init__()
         self.save_hyperparameters()
-        self.model = StandardResNet(num_classes=100)
+        self.model = StandardResNet(num_classes=100, num_extra_resblocks=3)
         self.criterion = nn.CrossEntropyLoss()
-
         self.train_losses, self.train_accs = [], []
         self.val_losses, self.val_accs = [], []
 
@@ -88,17 +87,16 @@ class ImageNet100Classifier(pl.LightningModule):
 
         scheduler = SequentialLR(optimizer, schedulers=[warmup, cosine],
                                  milestones=[self.hparams.warmup_epochs])
-
         return {"optimizer": optimizer, "lr_scheduler": scheduler, "monitor": "val/loss"}
 
 
 
 if __name__ == "__main__":
-    root_dir = "/kaggle/input/imagenet100"
+    root_dir = "/root/workspace/imagenet100"
     train_folders = ["train.X1", "train.X2", "train.X3", "train.X4"]
     val_folder = ["val.X"]
-    batch_size = 128
-    accumulate_grad_batches = 2
+    batch_size = 256
+    accumulate_grad_batches = 1
     max_epochs = 120
 
     train_transform = T.Compose([
@@ -136,20 +134,14 @@ if __name__ == "__main__":
         save_last=True,
         filename="StandardResNet_0"
     )
-
     model = ImageNet100Classifier(lr=0.1, max_epochs=max_epochs, warmup_epochs=10)
-
     trainer = pl.Trainer(
-        profiler="simple",
         max_epochs=max_epochs,
         accelerator="gpu",
-        devices=2,
-        strategy="ddp",
         logger=csv_logger,
         num_sanity_val_steps=0,
         accumulate_grad_batches=accumulate_grad_batches,
         callbacks=[lr_monitor, checkpoint_cb, RichProgressBar()],
         enable_progress_bar=True,
     )
-
     trainer.fit(model, train_loader, val_loader)
