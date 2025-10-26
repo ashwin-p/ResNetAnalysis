@@ -10,7 +10,6 @@ from torch.utils.data import DataLoader
 import pytorch_lightning as pl
 from pytorch_lightning.callbacks import LearningRateMonitor, ModelCheckpoint, RichProgressBar
 from pytorch_lightning.loggers import CSVLogger
-from torchinfo import summary 
 
 from scripts.dataset import ImageNet100Dataset
 from models.standard_resnet import StandardResNet
@@ -20,7 +19,7 @@ class ImageNet100Classifier(pl.LightningModule):
     def __init__(self, lr=0.1, max_epochs=120, warmup_epochs=10):
         super().__init__()
         self.save_hyperparameters()
-        self.model = StandardResNet(num_classes=100, num_extra_resblocks=3)
+        self.model = StandardResNet(num_classes=100, num_extra_resblocks=0)
         self.criterion = nn.CrossEntropyLoss()
         self.train_losses, self.train_accs = [], []
         self.val_losses, self.val_accs = [], []

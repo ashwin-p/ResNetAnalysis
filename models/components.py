@@ -1,20 +1,22 @@
 import torch.nn as nn
 
+import torch.nn as nn
+
 class Backbone(nn.Module):
     def __init__(self):
         super().__init__()
         self.stem = nn.Sequential(
             nn.Conv2d(3, 64, 3, padding=1, bias=False),
-            nn.BatchNorm2d(64),
+            nn.GroupNorm(16, 64),
             nn.LeakyReLU(0.01),
             nn.Conv2d(64, 64, 3, padding=1, stride=2, bias=False),
-            nn.BatchNorm2d(64),
+            nn.GroupNorm(16, 64),
             nn.LeakyReLU(0.01),
             nn.Conv2d(64, 64, 3, padding=1, bias=False),
-            nn.BatchNorm2d(64),
+            nn.GroupNorm(16, 64),
             nn.LeakyReLU(0.01),
             nn.Conv2d(64, 64, 3, padding=1, stride=2, bias=False),
-            nn.BatchNorm2d(64),
+            nn.GroupNorm(16, 64),
             nn.LeakyReLU(0.01),
         )
 
@@ -41,7 +43,7 @@ class ShortcutProjection(nn.Module):
         super().__init__()
         self.projection = nn.Sequential(
             nn.Conv2d(in_channels, out_channels, 1, stride=stride, bias=False),
-            nn.BatchNorm2d(out_channels),
+            nn.GroupNorm(16, out_channels),
         )
 
     def forward(self, x):
@@ -52,13 +54,13 @@ class ResidualBlock(nn.Module):
     def __init__(self, in_channels, out_channels, stride=1, negative_slope=0.01):
         super().__init__()
         self.preact1 = nn.Sequential(
-            nn.BatchNorm2d(in_channels),
+            nn.GroupNorm(16, in_channels),
             nn.LeakyReLU(negative_slope)
         )
         self.conv1 = nn.Conv2d(in_channels, out_channels, 3, stride=stride, padding=1, bias=False)
 
         self.preact2 = nn.Sequential(
-            nn.BatchNorm2d(out_channels),
+            nn.GroupNorm(16, out_channels),
             nn.LeakyReLU(negative_slope)
         )
         self.conv2 = nn.Conv2d(out_channels, out_channels, 3, padding=1, bias=False)
@@ -66,7 +68,7 @@ class ResidualBlock(nn.Module):
         if in_channels != out_channels or stride != 1:
             self.shortcut = nn.Sequential(
                 nn.Conv2d(in_channels, out_channels, 1, stride=stride, bias=False),
-                nn.BatchNorm2d(out_channels)
+                nn.GroupNorm(16, out_channels)
             )
         else:
             self.shortcut = nn.Identity()
